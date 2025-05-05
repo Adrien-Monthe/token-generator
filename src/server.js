@@ -3,9 +3,11 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./config/database');
 const userRoutes = require('./user/routes/user.routes');
-const authenticate = require('./middleware/auth');
+const tokenRoutes = require('./token/routes/token.routes');
 dotenv.config();
 const app = express();
+
+require('./token/model/token');
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(origin => origin.trim());
 
@@ -14,17 +16,16 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
-app.use(limiter);
 
 app.use('/api/auth', userRoutes);
-//app.use('/api/tokens', authenticate, taskRoutes);
+app.use('/api/tokens', tokenRoutes);
 
 const startServer = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected');
 
-        await sequelize.sync();
+        await sequelize.sync({ alter: true });
 
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
